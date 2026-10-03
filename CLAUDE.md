@@ -23,6 +23,17 @@ npx vitest run __tests__/page.test.tsx          # 単一ファイルのテスト
 npx vitest run -t "テスト名の一部"               # テスト名で絞り込み
 ```
 
+## Supabase 接続
+
+- クライアントは `src/lib/supabase.ts` の `supabase`（`@supabase/supabase-js` の `createClient`）を `@/lib/supabase` から import して使います。他の場所で `createClient` を再作成しないでください。
+- 環境変数の定義（変数名のみ）は `.env.example` に書き、git 管理します。実際の値は `.env.local` にあります（`.env*` は git 管理外。`.env.example` のみ例外）。新しい変数を追加するときは `.env.example` にも変数名を追加してください。
+  - `NEXT_PUBLIC_SUPABASE_URL`: プロジェクト URL
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`: publishable key（ブラウザに公開される前提のキー。secret key は `NEXT_PUBLIC_` を付けず、クライアントコードで使わないでください）
+- どちらかが未設定だと `src/lib/supabase.ts` は import 時に例外を投げます。テストで import する場合は環境変数を設定するか、外部依存としてモック化してください。
+- `src/instrumentation.ts` は Node.js ランタイムの起動時に `/auth/v1/health` へ疎通確認を行います。失敗時（環境変数未設定・HTTP エラー・例外）のみ `[Supabase] 接続失敗…` をログ出力し、成功時は何も出力しません。
+- `.mcp.json` に Supabase MCP（`https://mcp.supabase.com/mcp`）を設定済みです。スキーマ確認・SQL 実行・型生成などはこの MCP を使います。スキーマ変更前は `list_tables` で現状を確認してください。
+- `.env.local` 変更後は開発サーバーを再起動してください（環境変数は起動時に読み込まれるため）。
+
 ## テスト
 
 - Vitest + React Testing Library（環境は jsdom）。設定は `vitest.config.mts`、テストは `__tests__/` に置きます。
