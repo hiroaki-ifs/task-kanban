@@ -6,11 +6,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-`task-kanban` は Next.js (App Router) + React 19 + TypeScript + Tailwind CSS v4 + Supabase のタスク管理カンバンです。`src/app/page.tsx` が見出しと `KanbanBoard` を表示します。タスクの一覧・追加・編集・削除（CRUD）は実装済みです。
+`task-kanban` は Next.js (App Router) + React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui + Supabase のタスク管理カンバンです。`src/app/page.tsx` が見出しと `KanbanBoard` を表示します。タスクの一覧・追加・編集・削除（CRUD）は実装済みです。
 
 ```
 src/app/page.tsx            トップページ（Server Component。h1 + KanbanBoard）
 src/components/             KanbanBoard（状態を持つ Client）/ TaskForm（追加・編集共用）/ TaskCard
+src/components/ui/          shadcn/ui のコンポーネント（CLI が生成。button / card / input / textarea / label / badge / native-select）
+src/lib/utils.ts            cn ユーティリティ（shadcn/ui 用）
+components.json             shadcn/ui の設定
 src/lib/supabase.ts         Supabase クライアント（型付き）
 src/lib/tasks.ts            tasks テーブルの CRUD 関数
 src/types/database.ts       Supabase MCP で生成した DB 型
@@ -56,6 +59,29 @@ npx vitest run -t "テスト名の一部"               # テスト名で絞り�
 - タイトルの検証（trim 後に 1〜100 文字）は `TaskForm` で行い、DB の check 制約と一致させています。上限は `maxTitleLength` を参照してください。
 - 追加フォームと編集フォームは `TaskForm` を共用し、`KanbanBoard` が `key` を切り替えて入力値をリセットします。エラー表示は `role="alert"` です。
 - DB の動作確認に `execute_sql` を使うと RLS を迂回します。anon の権限まで確認するときは、アプリと同じ publishable key の supabase-js で実行してください（`node --env-file=.env.local` で読み込めます。キーの値は表示しないでください）。確認用の行は必ず削除してください。
+
+## shadcn/ui
+
+- `npx shadcn@latest init -d -y` で導入済みです。設定は `components.json`（style: `base-nova`、baseColor: `neutral`、アイコン: lucide、CSS 変数によるテーマ）。コンポーネントは Radix ではなく `@base-ui/react` ベースです。
+- コンポーネントの追加は `npx shadcn@latest add <name>` で行い、`src/components/ui/` に生成されます。生成物はプロジェクトのコードとして編集して構いませんが、手書きで作らず CLI で追加してください。
+- エイリアス: `@/components/ui`（ui）、`@/lib/utils`（utils）、`@/hooks`（hooks）。クラス結合には `cn` を使います。
+- `cn` は `src/lib/utils.ts` から npm パッケージ `cn` を再エクスポートしており、`button.tsx` は `@/lib/utils` ではなく `"cn"` を直接 import しています（CLI の生成結果）。
+- テーマ（CSS 変数・`tw-animate-css`・フォント設定）は `src/app/globals.css` に追記されています。色やラジウスの変更はここで行います。
+- `TaskForm` / `TaskCard` / `KanbanBoard` は shadcn/ui（Card / Input / Textarea / Label / Badge / Button / NativeSelect）で構成しています。テストが role・ラベル名で要素を探し `selectOptions` を使うため、ステータスは Base UI の Select ではなくネイティブ `<select>`（`NativeSelect`）を使い、アクセシブル名も変えないでください。
+- ダークモードは `.dark` クラス方式（`globals.css` の `@custom-variant dark`）で、現状は切り替え UI がありません（OS 設定には追従しません）。
+- Next.js 16 / Tailwind v4 / shadcn の仕様は変わりやすいので、CLI の使い方や新しいコンポーネントは context7 MCP（`/shadcn-ui/ui`）で最新ドキュメントを確認してください。
+
+## デザインルール
+
+- UI は shadcn/ui のコンポーネントで組み立てます。素の `<button>` `<input>` `<select>` などに Tailwind を直接当てて作らず、`src/components/ui/` に無いものは `npx shadcn@latest add <name>` で追加してください。
+- 色は `bg-card` `text-muted-foreground` `text-destructive` `border-input` などのテーマトークン（CSS 変数）を使い、`zinc-*` `red-*` のような固定色をテーマ用途に直書きしないでください。ライト/ダークの切り替えを `globals.css` の変数に任せるためです。例外はステータス表示色（`KanbanBoard` の `statusAccents`）のみです。
+- ボタンは `Button` の variant で意味を表します: 主操作 = `default`、副操作・キャンセル・編集 = `outline`、削除など破壊的操作 = `destructive`。カード内など小さい場所は `size="sm"`、アイコンは lucide-react を `Button` の子として置きます。
+- フォーム項目は `Label`（`htmlFor`）+ `Input` / `Textarea` / `NativeSelect` を `id` で関連付け、1 項目ごとに `flex flex-col gap-1.5` で縦に並べます。入力エラーは `aria-invalid` と `role="alert"`（`text-destructive`）で示します。
+- ステータス選択はネイティブ `<select>`（`NativeSelect`）を使います（テストが `selectOptions` で操作するため。Base UI の Select に置き換えない）。
+- 面は `Card`（`size="sm"` で密度を下げる）で表現し、カンバンの列は `bg-muted/60` + `rounded-xl` の面に色付きドット・件数 `Badge`・見出しを並べます。空の列は破線枠（`border-dashed`）+ `text-muted-foreground` で示します。
+- 余白は Tailwind のスケール（`gap-2` `gap-4` `gap-8` など）で揃え、レイアウトは `max-w-5xl` の中央寄せ、列は `md:grid-cols-3`（モバイルは 1 列）にします。
+- 見た目を変えるときもアクセシブル名（ラベル、`aria-label`、`region` 名、`role`）は変えません。変更後は Playwright でデスクトップ(1280px)とモバイル(390px)の表示、追加・編集・削除の動作を確認してください。
+- ダークモードは `.dark` クラス方式で、OS 設定には追従しません。確認するときは `<html>` に `dark` クラスを付けます。
 
 ## テスト
 

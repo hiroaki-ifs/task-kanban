@@ -1,3 +1,6 @@
+import { Pencil, Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import type { Task } from '@/types/task'
 
 type TaskCardProps = {
@@ -8,31 +11,39 @@ type TaskCardProps = {
 
 export default function TaskCard({ task, onEdit, onDelete }: TaskCardProps) {
   return (
-    <li className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-      <h3 className="break-words font-medium">{task.title}</h3>
-      {task.description && (
-        <p className="whitespace-pre-wrap break-words text-sm text-zinc-600 dark:text-zinc-400">
-          {task.description}
-        </p>
-      )}
-      <div className="flex gap-2 text-sm">
-        <button
-          type="button"
-          aria-label={`${task.title}を編集`}
-          onClick={() => onEdit(task)}
-          className="rounded border border-zinc-300 px-2 py-0.5 dark:border-zinc-600"
-        >
-          編集
-        </button>
-        <button
-          type="button"
-          aria-label={`${task.title}を削除`}
-          onClick={() => onDelete(task)}
-          className="rounded border border-red-300 px-2 py-0.5 text-red-600 dark:border-red-700"
-        >
-          削除
-        </button>
-      </div>
+    <li>
+      <Card size="sm" className="shadow-xs transition-shadow hover:shadow-md">
+        <CardContent className="flex flex-col gap-2">
+          <h3 className="break-words font-medium leading-snug">{task.title}</h3>
+          {task.description && (
+            <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">
+              {task.description}
+            </p>
+          )}
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label={`${task.title}を編集`}
+              onClick={() => onEdit(task)}
+            >
+              <Pencil />
+              編集
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              aria-label={`${task.title}を削除`}
+              onClick={() => onDelete(task)}
+            >
+              <Trash2 />
+              削除
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </li>
   )
 }

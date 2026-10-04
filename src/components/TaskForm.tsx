@@ -1,6 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { NativeSelect, NativeSelectOption } from '@/components/ui/native-select'
+import { Textarea } from '@/components/ui/textarea'
 import {
   maxTitleLength,
   taskStatusLabels,
@@ -47,65 +53,61 @@ export default function TaskForm({ task, onSubmit, onCancel }: TaskFormProps) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex flex-col gap-3 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-900"
-    >
-      <h2 className="text-lg font-semibold">{isEditing ? 'タスクを編集' : 'タスクを追加'}</h2>
-      <label className="flex flex-col gap-1 text-sm">
-        タイトル
-        <input
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-800"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        説明
-        <textarea
-          value={description}
-          onChange={(event) => setDescription(event.target.value)}
-          rows={3}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-800"
-        />
-      </label>
-      <label className="flex flex-col gap-1 text-sm">
-        ステータス
-        <select
-          value={status}
-          onChange={(event) => setStatus(event.target.value as TaskStatus)}
-          className="rounded border border-zinc-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-800"
-        >
-          {taskStatuses.map((value) => (
-            <option key={value} value={value}>
-              {taskStatusLabels[value]}
-            </option>
-          ))}
-        </select>
-      </label>
-      {validationError && (
-        <p role="alert" className="text-sm text-red-600">
-          {validationError}
-        </p>
-      )}
-      <div className="flex gap-2">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="rounded bg-foreground px-4 py-1.5 text-sm text-background disabled:opacity-50"
-        >
-          {isEditing ? '保存' : '追加'}
-        </button>
-        {isEditing && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="rounded border border-zinc-300 px-4 py-1.5 text-sm dark:border-zinc-600"
-          >
-            キャンセル
-          </button>
-        )}
-      </div>
-    </form>
+    <Card>
+      <CardHeader>
+        <h2 className="text-base font-semibold">{isEditing ? 'タスクを編集' : 'タスクを追加'}</h2>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-title">タイトル</Label>
+            <Input
+              id="task-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              aria-invalid={validationError !== null}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-description">説明</Label>
+            <Textarea
+              id="task-description"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              rows={3}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="task-status">ステータス</Label>
+            <NativeSelect
+              id="task-status"
+              value={status}
+              onChange={(event) => setStatus(event.target.value as TaskStatus)}
+            >
+              {taskStatuses.map((value) => (
+                <NativeSelectOption key={value} value={value}>
+                  {taskStatusLabels[value]}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
+          {validationError && (
+            <p role="alert" className="text-sm text-destructive">
+              {validationError}
+            </p>
+          )}
+          <div className="flex gap-2">
+            <Button type="submit" disabled={submitting}>
+              {isEditing ? '保存' : '追加'}
+            </Button>
+            {isEditing && (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                キャンセル
+              </Button>
+            )}
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   )
 }

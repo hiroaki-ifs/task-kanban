@@ -3,8 +3,21 @@
 import { useEffect, useState } from 'react'
 import TaskCard from '@/components/TaskCard'
 import TaskForm from '@/components/TaskForm'
+import { Badge } from '@/components/ui/badge'
 import { createTask, deleteTask, fetchTasks, updateTask } from '@/lib/tasks'
-import { taskStatusLabels, taskStatuses, type Task, type TaskInput } from '@/types/task'
+import {
+  taskStatusLabels,
+  taskStatuses,
+  type Task,
+  type TaskInput,
+  type TaskStatus,
+} from '@/types/task'
+
+const statusAccents: Record<TaskStatus, string> = {
+  todo: 'bg-slate-400',
+  doing: 'bg-amber-500',
+  done: 'bg-emerald-500',
+}
 
 export default function KanbanBoard() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -64,12 +77,12 @@ export default function KanbanBoard() {
     }
   }
 
-  if (loading) return <p>読み込み中…</p>
+  if (loading) return <p className="text-sm text-muted-foreground">読み込み中…</p>
 
   return (
     <div className="flex w-full flex-col gap-6">
       {error && (
-        <p role="alert" className="rounded bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
         </p>
       )}
@@ -81,18 +94,24 @@ export default function KanbanBoard() {
             onSubmit={handleSubmit}
             onCancel={() => setEditingTask(null)}
           />
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid items-start gap-4 md:grid-cols-3">
             {taskStatuses.map((status) => {
               const columnTasks = tasks.filter((task) => task.status === status)
               return (
                 <section
                   key={status}
                   aria-label={taskStatusLabels[status]}
-                  className="flex flex-col gap-3 rounded-lg bg-zinc-100 p-3 dark:bg-zinc-800"
+                  className="flex flex-col gap-3 rounded-xl bg-muted/60 p-3 ring-1 ring-foreground/5"
                 >
-                  <h2 className="font-semibold">{taskStatusLabels[status]}</h2>
+                  <div className="flex items-center gap-2 px-1">
+                    <span aria-hidden="true" className={`size-2.5 rounded-full ${statusAccents[status]}`} />
+                    <h2 className="font-semibold">{taskStatusLabels[status]}</h2>
+                    <Badge variant="secondary" className="ml-auto" aria-label={`${columnTasks.length}件`}>
+                      {columnTasks.length}
+                    </Badge>
+                  </div>
                   {columnTasks.length === 0 ? (
-                    <p className="text-sm text-zinc-500">タスクがありません</p>
+                    <p className="rounded-lg border border-dashed py-6 text-center text-sm text-muted-foreground">タスクがありません</p>
                   ) : (
                     <ul className="flex flex-col gap-2">
                       {columnTasks.map((task) => (
